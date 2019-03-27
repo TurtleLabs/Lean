@@ -99,6 +99,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (_liveMode)
                 {
+                    int sleepDelay;
                     var frontierUtc = FrontierTimeProvider.GetUtcNow();
                     // emit on data or if we've elapsed a full second since last emit or there are security changes
                     if (timeSlice.SecurityChanges != SecurityChanges.None
@@ -109,9 +110,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // force emitting every second since the data feed is
                         // the heartbeat of the application
                         nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
+                        sleepDelay = 1;
                     }
+                    else
+                    {
+                        // Sleeping a little more when there is no data will reduce CPU usage
+                        sleepDelay = 10;
+                    }
+
                     // take a short nap
-                    Thread.Sleep(1);
+                    Thread.Sleep(sleepDelay);
                 }
                 else
                 {
